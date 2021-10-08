@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/urfave/cli/v2"
@@ -26,6 +27,7 @@ const (
 	tlsServerNameFlag              = "tls_server_name"
 	headersProviderPluginFlag      = "headers_provider_plugin"
 	dataConverterPluginFlag        = "data_converter_plugin"
+	additionalFlag                 = "additional"
 )
 
 var (
@@ -93,6 +95,11 @@ func getAddOrUpdateFlags(required bool) []cli.Flag {
 			Aliases: []string{"dcp"},
 			Usage:   "data converter plugin executable name",
 		},
+		&cli.StringSliceFlag{
+			Name:    additionalFlag,
+			Aliases: []string{"a"},
+			Usage:   "add arbitrary environment variables to this context",
+		},
 	)
 }
 
@@ -109,20 +116,40 @@ func main() {
 	}
 }
 
-func configFromFlags(c *cli.Context) (configPath string, contextName string, clusterConfig *config.ClusterConfig) {
+func configFromFlags(c *cli.Context) (configPath string, contextName string, clusterConfig *config.ClusterConfig, err error) {
+	additionalEnvVars, err := parseAdditionalEnvVars(c.StringSlice(additionalFlag))
 	return c.String(configPathFlag), c.String(contextNameFlag), &config.ClusterConfig{
-		Address:         c.String(addressFlag),
-		Namespace:       c.String(namespaceFlag),
-		HeadersProvider: c.String(headersProviderPluginFlag),
-		DataConverter:   c.String(dataConverterPluginFlag),
-		TLS: &config.TLSConfig{
-			CertPath:                c.String(tlsCertFlag),
-			KeyPath:                 c.String(tlsKeyFlag),
-			CACertPath:              c.String(tlsCAFlag),
-			DisableHostVerification: c.Bool(tlsDisableHostVerificationFlag),
-			ServerName:              c.String(tlsServerNameFlag),
+			Address:         c.String(addressFlag),
+			Namespace:       c.String(namespaceFlag),
+			HeadersProvider: c.String(headersProviderPluginFlag),
+			DataConverter:   c.String(dataConverterPluginFlag),
+			TLS: &config.TLSConfig{
+				CertPath:                c.String(tlsCertFlag),
+				KeyPath:                 c.String(tlsKeyFlag),
+				CACertPath:              c.String(tlsCAFlag),
+				DisableHostVerification: c.Bool(tlsDisableHostVerificationFlag),
+				ServerName:              c.String(tlsServerNameFlag),
+			},
+			Additional: additionalEnvVars,
 		},
+		err
+}
+
+func parseAdditionalEnvVars(input []string) (additional map[string]string, err error) {
+	//fmt.Printf("%v\n", input)
+	envVars := make(map[string]string)
+	if input == nil {
+		return nil, nil
 	}
+	for _, kv := range input {
+		// Additional Environment Variables are expected to be of form KEY=value
+		kvSplit := strings.Split(kv, "=")
+		if len(kvSplit) == 0 || len(kvSplit) == 1 {
+			return nil, fmt.Errorf("Unable to parse additional environment variables %v \nEnter additional variables in the following format: --additional KEY=value --additional FOO=bar", input)
+		}
+		envVars[kvSplit[0]] = kvSplit[1]
+	}
+	return envVars, nil
 }
 
 func switchContexts(w io.Writer, rw *config.FSReaderWriter, contextName, namespace string) error {
@@ -159,7 +186,10 @@ func newApp(configFile string) *cli.App {
 				Usage: "add a new context",
 				Flags: getAddOrUpdateFlags(true),
 				Action: func(c *cli.Context) error {
-					path, name, cfg := configFromFlags(c)
+					path, name, cfg, err := configFromFlags(c)
+					if err != nil {
+						return err
+					}
 
 					rw, err := config.NewReaderWriter(path)
 					if err != nil {
@@ -184,7 +214,10 @@ func newApp(configFile string) *cli.App {
 				Usage: "update an existing context",
 				Flags: getAddOrUpdateFlags(false),
 				Action: func(c *cli.Context) error {
-					path, name, newCfg := configFromFlags(c)
+					path, name, newCfg, err := configFromFlags(c)
+					if err != nil {
+						return err
+					}
 
 					rw, err := config.NewReaderWriter(path)
 					if err != nil {
@@ -319,6 +352,9 @@ func newApp(configFile string) *cli.App {
 						"TEMPORAL_CLI_PLUGIN_HEADERS_PROVIDER": cfg.HeadersProvider,
 						"TEMPORAL_CLI_PLUGIN_DATA_CONVERTER":   cfg.DataConverter,
 					} {
+						env = append(env, fmt.Sprintf("%s=%s", k, v))
+					}
+					for k, v := range cfg.Additional {
 						env = append(env, fmt.Sprintf("%s=%s", k, v))
 					}
 

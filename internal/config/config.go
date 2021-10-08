@@ -31,6 +31,9 @@ type ClusterConfig struct {
 	// Data converter plugin executable name
 	DataConverter string     `json:"dataConverter"`
 	TLS           *TLSConfig `json:"tls,omitempty"`
+
+	// Any additional environment variables that are needed
+	Additional map[string]string `json:"additional,omitempty"`
 }
 
 func (c ClusterConfig) GetTLS() TLSConfig {
@@ -150,6 +153,14 @@ func (f *FSReaderWriter) UpsertContext(name string, new *ClusterConfig) error {
 		}
 		if new.TLS != nil {
 			existing.TLS = new.TLS
+		}
+		if new.Additional != nil {
+			if existing.Additional == nil {
+				existing.Additional = make(map[string]string)
+			}
+			for k, v := range new.Additional {
+				existing.Additional[k] = v
+			}
 		}
 	} else {
 		// Add a new entry
