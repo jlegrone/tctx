@@ -144,7 +144,7 @@ func parseAdditionalEnvVars(input []string) (additional map[string]string, err e
 		// Additional Environment Variables are expected to be of form KEY=value
 		kvSplit := strings.Split(kv, "=")
 		if len(kvSplit) == 0 || len(kvSplit) == 1 {
-			return nil, fmt.Errorf("Unable to parse additional environment variables %v \nEnter environment variables in the following format: --additional KEY=value --additional FOO=bar", input)
+			return nil, fmt.Errorf("Unable to parse environment variables %v \nEnter environment variables in the following format: --env KEY=value --env FOO=bar", input)
 		}
 		envVars[kvSplit[0]] = kvSplit[1]
 	}
