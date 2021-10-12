@@ -97,7 +97,7 @@ func getAddOrUpdateFlags(required bool) []cli.Flag {
 		},
 		&cli.StringSliceFlag{
 			Name:  envFlag,
-			Usage: "add arbitrary environment variables to this context",
+			Usage: "arbitrary environment variables to be set in this context, in the form of KEY=value",
 		},
 	)
 }
