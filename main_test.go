@@ -98,6 +98,20 @@ production    temporal.example.com:443    myapp        active`,
 			"TEMPORAL_CLI_PLUGIN_DATA_CONVERTER=bar-cli",
 		},
 	})
+	// Add Additional environment variables
+	c.Run(t, TestCase{
+		Command: "update -c production --ns test --env VAULT_ADDR=https://vault.test.example --env AUTH_ROLE=test_example --env FOO=bar",
+		StdOut:  "Context \"production\" modified.\nActive namespace is \"test\".",
+	})
+	// Check for new environment variables
+	c.Run(t, TestCase{
+		Command: "exec -- printenv",
+		StdOutContains: []string{
+			"VAULT_ADDR=https://vault.test.example",
+			"AUTH_ROLE=test_example",
+			"FOO=bar",
+		},
+	})
 }
 
 type TestCase struct {
