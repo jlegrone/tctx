@@ -135,7 +135,6 @@ func configFromFlags(c *cli.Context) (configPath string, contextName string, clu
 }
 
 func parseAdditionalEnvVars(input []string) (additional map[string]string, err error) {
-	//fmt.Printf("%v\n", input)
 	envVars := make(map[string]string)
 	if input == nil {
 		return nil, nil
