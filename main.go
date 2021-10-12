@@ -27,7 +27,7 @@ const (
 	tlsServerNameFlag              = "tls_server_name"
 	headersProviderPluginFlag      = "headers_provider_plugin"
 	dataConverterPluginFlag        = "data_converter_plugin"
-	additionalFlag                 = "additional"
+	envFlag                        = "env"
 )
 
 var (
@@ -96,9 +96,8 @@ func getAddOrUpdateFlags(required bool) []cli.Flag {
 			Usage:   "data converter plugin executable name",
 		},
 		&cli.StringSliceFlag{
-			Name:    additionalFlag,
-			Aliases: []string{"a"},
-			Usage:   "add arbitrary environment variables to this context",
+			Name:  envFlag,
+			Usage: "add arbitrary environment variables to this context",
 		},
 	)
 }
@@ -117,7 +116,7 @@ func main() {
 }
 
 func configFromFlags(c *cli.Context) (configPath string, contextName string, clusterConfig *config.ClusterConfig, err error) {
-	additionalEnvVars, err := parseAdditionalEnvVars(c.StringSlice(additionalFlag))
+	additionalEnvVars, err := parseAdditionalEnvVars(c.StringSlice(envFlag))
 	return c.String(configPathFlag), c.String(contextNameFlag), &config.ClusterConfig{
 			Address:         c.String(addressFlag),
 			Namespace:       c.String(namespaceFlag),
@@ -130,7 +129,7 @@ func configFromFlags(c *cli.Context) (configPath string, contextName string, clu
 				DisableHostVerification: c.Bool(tlsDisableHostVerificationFlag),
 				ServerName:              c.String(tlsServerNameFlag),
 			},
-			Additional: additionalEnvVars,
+			Environment: additionalEnvVars,
 		},
 		err
 }
@@ -145,7 +144,7 @@ func parseAdditionalEnvVars(input []string) (additional map[string]string, err e
 		// Additional Environment Variables are expected to be of form KEY=value
 		kvSplit := strings.Split(kv, "=")
 		if len(kvSplit) == 0 || len(kvSplit) == 1 {
-			return nil, fmt.Errorf("Unable to parse additional environment variables %v \nEnter additional variables in the following format: --additional KEY=value --additional FOO=bar", input)
+			return nil, fmt.Errorf("Unable to parse additional environment variables %v \nEnter environment variables in the following format: --additional KEY=value --additional FOO=bar", input)
 		}
 		envVars[kvSplit[0]] = kvSplit[1]
 	}
@@ -354,7 +353,7 @@ func newApp(configFile string) *cli.App {
 					} {
 						env = append(env, fmt.Sprintf("%s=%s", k, v))
 					}
-					for k, v := range cfg.Additional {
+					for k, v := range cfg.Environment {
 						env = append(env, fmt.Sprintf("%s=%s", k, v))
 					}
 

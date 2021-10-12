@@ -100,7 +100,7 @@ production    temporal.example.com:443    myapp        active`,
 	})
 	// Add Additional environment variables
 	c.Run(t, TestCase{
-		Command: "update -c production --ns test -a VAULT_ADDR=https://vault.test.example -a AUTH_ROLE=test_example -a FOO=bar",
+		Command: "update -c production --ns test --env VAULT_ADDR=https://vault.test.example --env AUTH_ROLE=test_example --env FOO=bar",
 		StdOut:  "Context \"production\" modified.\nActive namespace is \"test\".",
 	})
 	// Check for new environment variables

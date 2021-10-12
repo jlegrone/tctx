@@ -33,7 +33,7 @@ type ClusterConfig struct {
 	TLS           *TLSConfig `json:"tls,omitempty"`
 
 	// Any additional environment variables that are needed
-	Additional map[string]string `json:"additional,omitempty"`
+	Environment map[string]string `json:"additional,omitempty"`
 }
 
 func (c ClusterConfig) GetTLS() TLSConfig {
@@ -154,12 +154,12 @@ func (f *FSReaderWriter) UpsertContext(name string, new *ClusterConfig) error {
 		if new.TLS != nil {
 			existing.TLS = new.TLS
 		}
-		if new.Additional != nil {
-			if existing.Additional == nil {
-				existing.Additional = make(map[string]string)
+		if new.Environment != nil {
+			if existing.Environment == nil {
+				existing.Environment = make(map[string]string)
 			}
-			for k, v := range new.Additional {
-				existing.Additional[k] = v
+			for k, v := range new.Environment {
+				existing.Environment[k] = v
 			}
 		}
 	} else {
