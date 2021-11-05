@@ -37,13 +37,22 @@ var (
 	}
 )
 
+func getContextFlag(required bool) *cli.StringFlag {
+	return &cli.StringFlag{
+		Name:     contextNameFlag,
+		Aliases:  []string{"c"},
+		Usage:    "name of the context",
+		Required: required,
+	}
+}
+
 func getConfigPath(userConfigDir string) string {
 	return filepath.Join(userConfigDir, "tctx", "config.json")
 }
 
 func getContextAndNamespaceFlags(required bool, defaultNamespace string) []cli.Flag {
 	return []cli.Flag{
-		contextFlag,
+		getContextFlag(true),
 		&cli.StringFlag{
 			Name:     namespaceFlag,
 			Aliases:  []string{"ns"},
@@ -111,6 +120,7 @@ func main() {
 
 func configFromFlags(c *cli.Context) (configPath string, contextName string, clusterConfig *config.ClusterConfig) {
 	return c.String(configPathFlag), c.String(contextNameFlag), &config.ClusterConfig{
+		Name:            c.String(contextNameFlag),
 		Address:         c.String(addressFlag),
 		Namespace:       c.String(namespaceFlag),
 		HeadersProvider: c.String(headersProviderPluginFlag),
@@ -290,6 +300,7 @@ func newApp(configFile string) *cli.App {
 				Aliases:   []string{},
 				ArgsUsage: "-- <command> [args]",
 				Usage:     "execute a command with temporal environment variables set",
+				Flags:     []cli.Flag{getContextFlag(false)},
 				Action: func(c *cli.Context) error {
 					if c.Args().Len() == 0 {
 						return cli.ShowCommandHelp(c, "exec")
@@ -299,14 +310,24 @@ func newApp(configFile string) *cli.App {
 					if err != nil {
 						return err
 					}
+					contextName := c.String(contextNameFlag)
+					var cfg *config.ClusterConfig
+					if contextName != "" {
+						cfg, err = rw.GetContext(contextName)
+						if err != nil {
+							return err
+						}
 
-					cfg, err := rw.GetActiveContext()
-					if err != nil {
-						return err
+					} else {
+						cfg, err = rw.GetActiveContext()
+						if err != nil {
+							return err
+						}
 					}
 
 					env := os.Environ()
 					for k, v := range map[string]string{
+						"TEMPORAL_CLI_CONTEXT":   cfg.Name,
 						"TEMPORAL_CLI_ADDRESS":   cfg.Address,
 						"TEMPORAL_CLI_NAMESPACE": cfg.Namespace,
 						"TEMPORAL_CLI_TLS_CERT":  cfg.GetTLS().CertPath,

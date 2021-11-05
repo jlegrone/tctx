@@ -22,6 +22,8 @@ type TLSConfig struct {
 }
 
 type ClusterConfig struct {
+	// Name of the context
+	Name string `json:"name"`
 	// host:port for Temporal frontend service
 	Address string `json:"address"`
 	// Temporal workflow namespace (default: "default")
