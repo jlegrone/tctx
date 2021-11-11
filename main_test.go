@@ -56,7 +56,6 @@ production    temporal.example.com:443    myapp        active`,
 	c.Run(t, TestCase{
 		Command: "exec -- printenv",
 		StdOutContains: []string{
-			"TEMPORAL_CLI_CONTEXT=production",
 			"TEMPORAL_CLI_NAMESPACE=myapp",
 			"TEMPORAL_CLI_ADDRESS=temporal.example.com:443",
 		},
@@ -70,7 +69,6 @@ production    temporal.example.com:443    myapp        active`,
 	c.Run(t, TestCase{
 		Command: "exec -- printenv",
 		StdOutContains: []string{
-			"TEMPORAL_CLI_CONTEXT=localhost",
 			"TEMPORAL_CLI_NAMESPACE=bar",
 			"TEMPORAL_CLI_ADDRESS=localhost:7233",
 		},
@@ -94,7 +92,6 @@ production    temporal.example.com:443    myapp        active`,
 	c.Run(t, TestCase{
 		Command: "exec -- printenv",
 		StdOutContains: []string{
-			"TEMPORAL_CLI_CONTEXT=production",
 			"TEMPORAL_CLI_NAMESPACE=test",
 			"TEMPORAL_CLI_ADDRESS=temporal.example.com:443",
 			"TEMPORAL_CLI_TLS_CERT=foo",
@@ -121,7 +118,6 @@ production    temporal.example.com:443    myapp        active`,
 	c.Run(t, TestCase{
 		Command: "exec -c staging -- printenv",
 		StdOutContains: []string{
-			"TEMPORAL_CLI_CONTEXT=staging",
 			"TEMPORAL_CLI_NAMESPACE=staging",
 			"TEMPORAL_CLI_ADDRESS=staging:7233",
 		},

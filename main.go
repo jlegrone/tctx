@@ -118,7 +118,6 @@ func main() {
 func configFromFlags(c *cli.Context) (configPath string, contextName string, clusterConfig *config.ClusterConfig, err error) {
 	additionalEnvVars, err := parseAdditionalEnvVars(c.StringSlice(envFlag))
 	return c.String(configPathFlag), c.String(contextNameFlag), &config.ClusterConfig{
-			Name:            c.String(contextNameFlag),
 			Address:         c.String(addressFlag),
 			Namespace:       c.String(namespaceFlag),
 			HeadersProvider: c.String(headersProviderPluginFlag),
@@ -352,7 +351,6 @@ func newApp(configFile string) *cli.App {
 
 					env := os.Environ()
 					for k, v := range map[string]string{
-						"TEMPORAL_CLI_CONTEXT":   cfg.Name,
 						"TEMPORAL_CLI_ADDRESS":   cfg.Address,
 						"TEMPORAL_CLI_NAMESPACE": cfg.Namespace,
 						"TEMPORAL_CLI_TLS_CERT":  cfg.GetTLS().CertPath,
