@@ -112,7 +112,6 @@ production    temporal.example.com:443    myapp        active`,
 		Command: "use -c production -ns test",
 		StdOut:  "Context \"production\" modified.\nActive namespace is \"test\".",
 	})
-
 	// Execute command with staging context (without switching)
 	c.Run(t, TestCase{
 		Command: "exec -c staging -- printenv",
@@ -120,6 +119,21 @@ production    temporal.example.com:443    myapp        active`,
 			"TEMPORAL_CLI_CONTEXT=staging",
 			"TEMPORAL_CLI_NAMESPACE=staging",
 			"TEMPORAL_CLI_ADDRESS=staging:7233",
+		},
+	})
+
+	// Add Additional environment variables
+	c.Run(t, TestCase{
+		Command: "update -c production --ns test --env VAULT_ADDR=https://vault.test.example --env AUTH_ROLE=test_example --env FOO=bar",
+		StdOut:  "Context \"production\" modified.\nActive namespace is \"test\".",
+	})
+	// Check for new environment variables
+	c.Run(t, TestCase{
+		Command: "exec -- printenv",
+		StdOutContains: []string{
+			"VAULT_ADDR=https://vault.test.example",
+			"AUTH_ROLE=test_example",
+			"FOO=bar",
 		},
 	})
 
