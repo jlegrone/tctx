@@ -89,6 +89,7 @@ production    temporal.example.com:443    myapp        active`,
 	c.Run(t, TestCase{
 		Command: "exec -- printenv",
 		StdOutContains: []string{
+			"TEMPORAL_CLI_CONTEXT=production",
 			"TEMPORAL_CLI_NAMESPACE=test",
 			"TEMPORAL_CLI_ADDRESS=temporal.example.com:443",
 			"TEMPORAL_CLI_TLS_CERT=foo",
@@ -100,6 +101,29 @@ production    temporal.example.com:443    myapp        active`,
 			"TEMPORAL_CLI_PLUGIN_DATA_CONVERTER=bar-cli",
 		},
 	})
+
+	// Create new staging context
+	c.Run(t, TestCase{
+		Command: "add -c staging --namespace staging --address staging:7233",
+		StdOut:  "Context \"staging\" modified.\nActive namespace is \"staging\".\n",
+	})
+	// Switch to production
+	c.Run(t, TestCase{
+		Command: "use -c production -ns test",
+		StdOut:  "Context \"production\" modified.\nActive namespace is \"test\".",
+	})
+
+	// Execute command with staging context (without switching)
+	c.Run(t, TestCase{
+		Command: "exec -c staging -- printenv",
+		StdOutContains: []string{
+			"TEMPORAL_CLI_CONTEXT=staging",
+			"TEMPORAL_CLI_NAMESPACE=staging",
+			"TEMPORAL_CLI_ADDRESS=staging:7233",
+		},
+	})
+
+	// Delete individual environment variable from prod context
 }
 
 type TestCase struct {

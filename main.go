@@ -28,15 +28,6 @@ const (
 	dataConverterPluginFlag        = "data_converter_plugin"
 )
 
-var (
-	contextFlag = &cli.StringFlag{
-		Name:     contextNameFlag,
-		Aliases:  []string{"c"},
-		Usage:    "name of the context",
-		Required: true,
-	}
-)
-
 func getContextFlag(required bool) *cli.StringFlag {
 	return &cli.StringFlag{
 		Name:     contextNameFlag,
@@ -218,7 +209,7 @@ func newApp(configFile string) *cli.App {
 				Aliases: []string{},
 				Usage:   "remove a context",
 				Flags: []cli.Flag{
-					contextFlag,
+					getContextFlag(true),
 				},
 				Action: func(c *cli.Context) error {
 					rw, err := config.NewReaderWriter(c.String(configPathFlag))
@@ -310,6 +301,7 @@ func newApp(configFile string) *cli.App {
 					if err != nil {
 						return err
 					}
+
 					contextName := c.String(contextNameFlag)
 					var cfg *config.ClusterConfig
 					if contextName != "" {
