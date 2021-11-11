@@ -338,15 +338,12 @@ func newApp(configFile string) *cli.App {
 					var cfg *config.ClusterConfig
 					if contextName != "" {
 						cfg, err = rw.GetContext(contextName)
-						if err != nil {
-							return err
-						}
 
 					} else {
 						cfg, err = rw.GetActiveContext()
-						if err != nil {
-							return err
-						}
+					}
+					if err != nil {
+						return err
 					}
 
 					env := os.Environ()
