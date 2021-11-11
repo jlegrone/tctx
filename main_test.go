@@ -29,6 +29,11 @@ func TestCLI(t *testing.T) {
 		Command: "list",
 		StdOut:  "NAME    ADDRESS    NAMESPACE    STATUS",
 	})
+	// Check for error if no active context
+	c.Run(t, TestCase{
+		Command:       "exec -- printenv",
+		ExpectedError: fmt.Errorf("no contexts exist: create one with `tctx add`"),
+	})
 	// Add a context
 	c.Run(t, TestCase{
 		Command: "add -c localhost --namespace default --address localhost:7233",
@@ -120,6 +125,11 @@ production    temporal.example.com:443    myapp        active`,
 			"TEMPORAL_CLI_NAMESPACE=staging",
 			"TEMPORAL_CLI_ADDRESS=staging:7233",
 		},
+	})
+	// Fail to execute with nonexistent context
+	c.Run(t, TestCase{
+		Command:       "exec -c not-a-context -- printenv",
+		ExpectedError: fmt.Errorf("context \"not-a-context\" does not exist"),
 	})
 
 	// Add Additional environment variables
