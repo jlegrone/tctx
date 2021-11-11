@@ -136,8 +136,6 @@ production    temporal.example.com:443    myapp        active`,
 			"FOO=bar",
 		},
 	})
-
-	// Delete individual environment variable from prod context
 }
 
 type TestCase struct {
