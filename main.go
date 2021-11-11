@@ -322,7 +322,9 @@ func newApp(configFile string) *cli.App {
 				Aliases:   []string{},
 				ArgsUsage: "-- <command> [args]",
 				Usage:     "execute a command with temporal environment variables set",
-				Flags:     []cli.Flag{getContextFlag(false)},
+				Flags: []cli.Flag{
+					getContextFlag(false),
+				},
 				Action: func(c *cli.Context) error {
 					if c.Args().Len() == 0 {
 						return cli.ShowCommandHelp(c, "exec")
