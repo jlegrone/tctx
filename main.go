@@ -335,13 +335,14 @@ func newApp(configFile string) *cli.App {
 					}
 
 					contextName := c.String(contextNameFlag)
-					var cfg *config.ClusterConfig
-					if contextName != "" {
-						cfg, err = rw.GetContext(contextName)
-
-					} else {
-						cfg, err = rw.GetActiveContext()
+					if contextName == "" {
+						contextName, err = rw.GetActiveContextName()
+						if err != nil {
+							return err
+						}
 					}
+
+					cfg, err := rw.GetContext(contextName)
 					if err != nil {
 						return err
 					}
