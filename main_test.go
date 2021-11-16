@@ -29,6 +29,11 @@ func TestCLI(t *testing.T) {
 		Command: "list",
 		StdOut:  "NAME    ADDRESS    NAMESPACE    STATUS",
 	})
+	// Check for error if no active context
+	c.Run(t, TestCase{
+		Command:       "exec -- printenv",
+		ExpectedError: fmt.Errorf("no contexts exist: create one with `tctx add`"),
+	})
 	// Add a context
 	c.Run(t, TestCase{
 		Command: "add -c localhost --namespace default --address localhost:7233",
@@ -98,6 +103,31 @@ production    temporal.example.com:443    myapp        active`,
 			"TEMPORAL_CLI_PLUGIN_DATA_CONVERTER=bar-cli",
 		},
 	})
+
+	// Create new staging context
+	c.Run(t, TestCase{
+		Command: "add -c staging --namespace staging --address staging:7233",
+		StdOut:  "Context \"staging\" modified.\nActive namespace is \"staging\".\n",
+	})
+	// Switch to production
+	c.Run(t, TestCase{
+		Command: "use -c production -ns test",
+		StdOut:  "Context \"production\" modified.\nActive namespace is \"test\".",
+	})
+	// Execute command with staging context (without switching)
+	c.Run(t, TestCase{
+		Command: "exec -c staging -- printenv",
+		StdOutContains: []string{
+			"TEMPORAL_CLI_NAMESPACE=staging",
+			"TEMPORAL_CLI_ADDRESS=staging:7233",
+		},
+	})
+	// Fail to execute with nonexistent context
+	c.Run(t, TestCase{
+		Command:       "exec -c not-a-context -- printenv",
+		ExpectedError: fmt.Errorf("context \"not-a-context\" does not exist"),
+	})
+
 	// Add Additional environment variables
 	c.Run(t, TestCase{
 		Command: "update -c production --ns test --env VAULT_ADDR=https://vault.test.example --env AUTH_ROLE=test_example --env FOO=bar",

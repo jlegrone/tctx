@@ -114,6 +114,22 @@ func (f *FSReaderWriter) GetActiveContext() (*ClusterConfig, error) {
 	return nil, fmt.Errorf("context does not exist")
 }
 
+func (f *FSReaderWriter) GetActiveContextName() (string, error) {
+	cfg, err := f.GetAllContexts()
+	if err != nil {
+		return "", err
+	}
+
+	if len(cfg.Contexts) == 0 {
+		return "", fmt.Errorf("no contexts exist: create one with `tctx add`")
+	}
+
+	if cfg.ActiveContext == "" {
+		return "", fmt.Errorf("no active context: set one with `tctx use`")
+	}
+	return cfg.ActiveContext, nil
+}
+
 func (f *FSReaderWriter) GetAllContexts() (*Config, error) {
 	file, err := os.Open(f.path)
 	if err != nil {

@@ -30,14 +30,14 @@ const (
 	envFlag                        = "env"
 )
 
-var (
-	contextFlag = &cli.StringFlag{
+func getContextFlag(required bool) *cli.StringFlag {
+	return &cli.StringFlag{
 		Name:     contextNameFlag,
 		Aliases:  []string{"c"},
 		Usage:    "name of the context",
-		Required: true,
+		Required: required,
 	}
-)
+}
 
 func getConfigPath(userConfigDir string) string {
 	return filepath.Join(userConfigDir, "tctx", "config.json")
@@ -45,7 +45,7 @@ func getConfigPath(userConfigDir string) string {
 
 func getContextAndNamespaceFlags(required bool, defaultNamespace string) []cli.Flag {
 	return []cli.Flag{
-		contextFlag,
+		getContextFlag(true),
 		&cli.StringFlag{
 			Name:     namespaceFlag,
 			Aliases:  []string{"ns"},
@@ -239,7 +239,7 @@ func newApp(configFile string) *cli.App {
 				Aliases: []string{},
 				Usage:   "remove a context",
 				Flags: []cli.Flag{
-					contextFlag,
+					getContextFlag(true),
 				},
 				Action: func(c *cli.Context) error {
 					rw, err := config.NewReaderWriter(c.String(configPathFlag))
@@ -321,6 +321,9 @@ func newApp(configFile string) *cli.App {
 				Aliases:   []string{},
 				ArgsUsage: "-- <command> [args]",
 				Usage:     "execute a command with temporal environment variables set",
+				Flags: []cli.Flag{
+					getContextFlag(false),
+				},
 				Action: func(c *cli.Context) error {
 					if c.Args().Len() == 0 {
 						return cli.ShowCommandHelp(c, "exec")
@@ -331,7 +334,15 @@ func newApp(configFile string) *cli.App {
 						return err
 					}
 
-					cfg, err := rw.GetActiveContext()
+					contextName := c.String(contextNameFlag)
+					if contextName == "" {
+						contextName, err = rw.GetActiveContextName()
+						if err != nil {
+							return err
+						}
+					}
+
+					cfg, err := rw.GetContext(contextName)
 					if err != nil {
 						return err
 					}

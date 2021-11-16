@@ -62,6 +62,13 @@ To view all environment variables set for the current context, run
 tctx exec -- printenv | grep TEMPORAL_CLI
 ```
 
+By default `tctx exec` uses the active context. The active context is set by the last `tctx use` or `tctx add` command. 
+You can override the active context by adding a context flag 
+
+```bash
+tctx exec -c <context> -- <command>
+```
+
 ### Define an alias
 
 Typing `tctx exec -- tctl` is a lot of effort. It's possible to define an alias to make this easier.
