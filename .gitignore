@@ -16,3 +16,6 @@
 
 # Editor Config
 .idea
+
+# Output binary
+tctx

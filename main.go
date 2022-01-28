@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -9,16 +10,19 @@ import (
 	"sort"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	"github.com/urfave/cli/v2"
 
 	"github.com/jlegrone/tctx/internal/config"
+	"github.com/jlegrone/tctx/internal/xbar"
 )
 
 const (
 	configPathFlag                 = "config_path"
 	contextNameFlag                = "context"
 	addressFlag                    = "address"
+	webAddressFlag                 = "web_address"
 	namespaceFlag                  = "namespace"
 	tlsCertFlag                    = "tls_cert_path"
 	tlsKeyFlag                     = "tls_key_path"
@@ -64,6 +68,11 @@ func getAddOrUpdateFlags(required bool) []cli.Flag {
 			Aliases:  []string{"ad"},
 			Usage:    "host:port for Temporal frontend service",
 			Required: required,
+		},
+		&cli.StringFlag{
+			Name:    webAddressFlag,
+			Aliases: []string{"wad"},
+			Usage:   "URL for Temporal web UI",
 		},
 		&cli.StringFlag{
 			Name:  tlsCertFlag,
@@ -119,6 +128,7 @@ func configFromFlags(c *cli.Context) (configPath string, contextName string, clu
 	additionalEnvVars, err := parseAdditionalEnvVars(c.StringSlice(envFlag))
 	return c.String(configPathFlag), c.String(contextNameFlag), &config.ClusterConfig{
 			Address:         c.String(addressFlag),
+			WebAddress:      c.String(webAddressFlag),
 			Namespace:       c.String(namespaceFlag),
 			HeadersProvider: c.String(headersProviderPluginFlag),
 			DataConverter:   c.String(dataConverterPluginFlag),
@@ -314,6 +324,42 @@ func newApp(configFile string) *cli.App {
 					}
 
 					return switchContexts(c.App.Writer, rw, contextName, namespace)
+				},
+			},
+			{
+				Name:   "tctxbar",
+				Hidden: true,
+				Flags: []cli.Flag{
+					&xbar.ShowClusterFlag,
+					&xbar.ShowNamespaceFlag,
+				},
+				Action: func(c *cli.Context) error {
+					executablePath, err := os.Executable()
+					if err != nil {
+						return err
+					}
+
+					rw, err := config.NewReaderWriter(c.String(configPathFlag))
+					if err != nil {
+						return err
+					}
+					cfg, err := rw.GetAllContexts()
+					if err != nil {
+						return err
+					}
+
+					// Define a timeout to avoid blocking menu rendering on querying
+					// Temporal cluster state.
+					ctx, cancel := context.WithTimeout(c.Context, time.Second)
+					defer cancel()
+
+					return xbar.Render(ctx, &xbar.Options{
+						Config:        cfg,
+						TctxPath:      executablePath,
+						TctlPath:      "tctl",
+						ShowCluster:   c.Bool(xbar.ShowClusterFlag.Name),
+						ShowNamespace: c.Bool(xbar.ShowNamespaceFlag.Name),
+					})
 				},
 			},
 			{
