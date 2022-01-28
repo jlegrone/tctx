@@ -24,6 +24,8 @@ type TLSConfig struct {
 type ClusterConfig struct {
 	// host:port for Temporal frontend service
 	Address string `json:"address"`
+	// Web UI Link
+	WebAddress string `json:"webAddress"`
 	// Temporal workflow namespace (default: "default")
 	Namespace string `json:"namespace"`
 	// Headers provider plugin executable name
@@ -31,7 +33,6 @@ type ClusterConfig struct {
 	// Data converter plugin executable name
 	DataConverter string     `json:"dataConverter"`
 	TLS           *TLSConfig `json:"tls,omitempty"`
-
 	// Any additional environment variables that are needed
 	Environment map[string]string `json:"additional,omitempty"`
 }
