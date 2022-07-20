@@ -35,6 +35,12 @@ type ClusterConfig struct {
 	Environment map[string]string `json:"additional,omitempty"`
 }
 
+type Config struct {
+	ActiveContext string `json:"active"`
+	// Map of context names to cluster configuration
+	Contexts map[string]*ClusterConfig `json:"contexts"`
+}
+
 func (c ClusterConfig) GetTLS() TLSConfig {
 	if c.TLS == nil {
 		return TLSConfig{}

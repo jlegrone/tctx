@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jlegrone/tctx/config/config"
+	"github.com/jlegrone/tctx/config"
 	"github.com/urfave/cli/v2"
 )
 
