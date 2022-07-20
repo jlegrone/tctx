@@ -8,77 +8,69 @@ import (
 	"path/filepath"
 )
 
-type TLSConfig struct {
-	// Path to x509 certificate
-	CertPath string `json:"certPath"`
-	// Path to private key
-	KeyPath string `json:"keyPath"`
-	// Path to server CA certificate
-	CACertPath string `json:"caPath"`
-	// Disable tls host name verification (tls must be enabled)
-	DisableHostVerification bool `json:"disableHostVerification"`
-	// Override for target server name
-	ServerName string `json:"serverName"`
+type Tctx struct {
+	configFilePath string
 }
 
-type ClusterConfig struct {
-	// host:port for Temporal frontend service
-	Address string `json:"address"`
-	// Web UI Link
-	WebAddress string `json:"webAddress"`
-	// Temporal workflow namespace (default: "default")
-	Namespace string `json:"namespace"`
-	// Headers provider plugin executable name
-	HeadersProvider string `json:"headersProvider"`
-	// Data converter plugin executable name
-	DataConverter string     `json:"dataConverter"`
-	TLS           *TLSConfig `json:"tls,omitempty"`
-	// Any additional environment variables that are needed
-	Environment map[string]string `json:"additional,omitempty"`
-}
+type Option func(t *Tctx)
 
-func (c ClusterConfig) GetTLS() TLSConfig {
-	if c.TLS == nil {
-		return TLSConfig{}
+func WithConfigFile(configFilePath string) Option {
+	return func(t *Tctx) {
+		t.configFilePath = configFilePath
 	}
-	return *c.TLS
 }
 
-type Config struct {
-	ActiveContext string `json:"active"`
-	// Map of context names to cluster configuration
-	Contexts map[string]*ClusterConfig `json:"contexts"`
-}
+func NewTctx(opts ...Option) (*Tctx, error) {
+	t := Tctx{}
 
-func NewReaderWriter(file string) (*FSReaderWriter, error) {
+	// Apply Options
+	for _, opt := range opts {
+		opt(&t)
+	}
+
+	// Set Default Options
+	if t.configFilePath == "" {
+		configFilePath, err := GetDefaultConfigPath()
+		if err != nil {
+			return nil, err
+		}
+		t.configFilePath = configFilePath
+	}
+
 	// Attempt creating parent directory if it doesn't yet exist
-	if _, err := os.Stat(filepath.Dir(file)); os.IsNotExist(err) {
-		if err := os.Mkdir(filepath.Dir(file), os.ModePerm); err != nil {
+	if _, err := os.Stat(filepath.Dir(t.configFilePath)); os.IsNotExist(err) {
+		if err := os.Mkdir(filepath.Dir(t.configFilePath), os.ModePerm); err != nil {
 			return nil, fmt.Errorf("error creating config directory: %w", err)
 		}
 	}
 
-	rw := FSReaderWriter{file}
-
-	// Create empty config file if none exists
-	if _, err := rw.GetAllContexts(); err != nil {
+	// Create empty config t.configFilePath if none exists
+	if _, err := t.GetAllContexts(); err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
 			return nil, err
 		}
-		if err := write(file, &Config{}); err != nil {
+		if err := write(t.configFilePath, &Config{}); err != nil {
 			return nil, err
 		}
 	}
 
-	return &rw, nil
+	return &t, nil
 }
 
-type FSReaderWriter struct {
-	path string
+func (t *Tctx) GetContextNames() ([]string, error) {
+	cfgs, err := t.GetAllContexts()
+	if err != nil {
+		return nil, err
+	}
+	names := []string{}
+	for name := range cfgs.Contexts {
+		names = append(names, name)
+	}
+	return names, nil
 }
 
-func (f *FSReaderWriter) GetContext(name string) (*ClusterConfig, error) {
-	cfg, err := f.GetAllContexts()
+func (t *Tctx) GetContext(name string) (*ClusterConfig, error) {
+	cfg, err := t.GetAllContexts()
 	if err != nil {
 		return nil, fmt.Errorf("could not get all contexts: %w", err)
 	}
@@ -92,8 +84,8 @@ func (f *FSReaderWriter) GetContext(name string) (*ClusterConfig, error) {
 	return nil, fmt.Errorf("context %q does not exist", name)
 }
 
-func (f *FSReaderWriter) GetActiveContext() (*ClusterConfig, error) {
-	cfg, err := f.GetAllContexts()
+func (t *Tctx) GetActiveContext() (*ClusterConfig, error) {
+	cfg, err := t.GetAllContexts()
 	if err != nil {
 		return nil, err
 	}
@@ -115,8 +107,8 @@ func (f *FSReaderWriter) GetActiveContext() (*ClusterConfig, error) {
 	return nil, fmt.Errorf("context does not exist")
 }
 
-func (f *FSReaderWriter) GetActiveContextName() (string, error) {
-	cfg, err := f.GetAllContexts()
+func (t *Tctx) GetActiveContextName() (string, error) {
+	cfg, err := t.GetAllContexts()
 	if err != nil {
 		return "", err
 	}
@@ -131,15 +123,15 @@ func (f *FSReaderWriter) GetActiveContextName() (string, error) {
 	return cfg.ActiveContext, nil
 }
 
-func (f *FSReaderWriter) GetAllContexts() (*Config, error) {
-	file, err := os.Open(f.path)
+func (t *Tctx) GetAllContexts() (*Config, error) {
+	file, err := os.Open(t.configFilePath)
 	if err != nil {
 		return nil, err
 	}
 
 	var result Config
 	if err := json.NewDecoder(file).Decode(&result); err != nil {
-		return nil, fmt.Errorf("error parsing config file: %w", err)
+		return nil, fmt.Errorf("error parsing config t.configFilePath: %w", err)
 	}
 	if result.Contexts == nil {
 		result.Contexts = map[string]*ClusterConfig{}
@@ -148,8 +140,8 @@ func (f *FSReaderWriter) GetAllContexts() (*Config, error) {
 	return &result, nil
 }
 
-func (f *FSReaderWriter) UpsertContext(name string, new *ClusterConfig) error {
-	allContexts, err := f.GetAllContexts()
+func (t *Tctx) UpsertContext(name string, new *ClusterConfig) error {
+	allContexts, err := t.GetAllContexts()
 	if err != nil {
 		return err
 	}
@@ -184,11 +176,11 @@ func (f *FSReaderWriter) UpsertContext(name string, new *ClusterConfig) error {
 		allContexts.Contexts[name] = new
 	}
 
-	return write(f.path, allContexts)
+	return write(t.configFilePath, allContexts)
 }
 
-func (f *FSReaderWriter) SetActiveContext(name, namespace string) error {
-	config, err := f.GetAllContexts()
+func (t *Tctx) SetActiveContext(name, namespace string) error {
+	config, err := t.GetAllContexts()
 	if err != nil {
 		return fmt.Errorf("could not get contexts: %w", err)
 	}
@@ -197,7 +189,7 @@ func (f *FSReaderWriter) SetActiveContext(name, namespace string) error {
 		config.ActiveContext = name
 	}
 	// Check that context exists
-	if _, err := f.GetContext(config.ActiveContext); err != nil {
+	if _, err := t.GetContext(config.ActiveContext); err != nil {
 		return fmt.Errorf("error checking for active context: %w", err)
 	}
 
@@ -205,17 +197,17 @@ func (f *FSReaderWriter) SetActiveContext(name, namespace string) error {
 		config.Contexts[config.ActiveContext].Namespace = namespace
 	}
 
-	return write(f.path, config)
+	return write(t.configFilePath, config)
 }
 
-func (f *FSReaderWriter) DeleteContext(name string) error {
-	config, err := f.GetAllContexts()
+func (t *Tctx) DeleteContext(name string) error {
+	config, err := t.GetAllContexts()
 	if err != nil {
 		return fmt.Errorf("could not get contexts: %w", err)
 	}
 
 	// Return early if context does not exist
-	if _, err := f.GetContext(name); err != nil {
+	if _, err := t.GetContext(name); err != nil {
 		return err
 	}
 
@@ -224,7 +216,7 @@ func (f *FSReaderWriter) DeleteContext(name string) error {
 	}
 	delete(config.Contexts, name)
 
-	return write(f.path, config)
+	return write(t.configFilePath, config)
 }
 
 func write(filepath string, config *Config) error {
