@@ -1,24 +1,19 @@
 package config
 
-type Tctx interface {
-	GetActiveClusterConfig() (*ClusterConfig, error)
-	GetClusterConfig(string) (*ClusterConfig, error)
-}
-
-type tctx struct {
+type Tctx struct {
 	configFilePath string
 }
 
-type Option func(t *tctx)
+type Option func(t *Tctx)
 
 func WithConfigFile(configFilePath string) Option {
-	return func(t *tctx) {
+	return func(t *Tctx) {
 		t.configFilePath = configFilePath
 	}
 }
 
-func NewTctx(opts ...Option) (Tctx, error) {
-	t := tctx{}
+func NewTctx(opts ...Option) (*Tctx, error) {
+	t := Tctx{}
 
 	// Apply Options
 	for _, opt := range opts {
@@ -37,7 +32,7 @@ func NewTctx(opts ...Option) (Tctx, error) {
 	return &t, nil
 }
 
-func (t *tctx) GetActiveClusterConfig() (*ClusterConfig, error) {
+func (t *Tctx) GetActiveClusterConfig() (*ClusterConfig, error) {
 	rw, err := NewReaderWriter(t.configFilePath)
 	if err != nil {
 		return nil, err
@@ -50,7 +45,7 @@ func (t *tctx) GetActiveClusterConfig() (*ClusterConfig, error) {
 	return cfg, err
 }
 
-func (t *tctx) GetClusterConfig(contextName string) (*ClusterConfig, error) {
+func (t *Tctx) GetClusterConfig(contextName string) (*ClusterConfig, error) {
 	rw, err := NewReaderWriter(t.configFilePath)
 	if err != nil {
 		return nil, err
