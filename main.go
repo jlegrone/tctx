@@ -13,8 +13,8 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/evchee/tctx/config"
-	"github.com/evchee/tctx/internal/xbar"
+	"github.com/jlegrone/tctx/config"
+	"github.com/jlegrone/tctx/internal/xbar"
 )
 
 const (

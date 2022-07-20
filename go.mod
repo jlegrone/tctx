@@ -1,4 +1,4 @@
-module github.com/evchee/tctx
+module github.com/jlegrone/tctx
 
 go 1.16
 

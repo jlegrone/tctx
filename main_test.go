@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/evchee/tctx/config"
+	"github.com/jlegrone/tctx/config"
 	"github.com/urfave/cli/v2"
 )
 
