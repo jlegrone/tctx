@@ -13,7 +13,9 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/jlegrone/tctx/config"
+	"github.com/jlegrone/tctx/config/config"
+	"github.com/jlegrone/tctx/internal/configrw"
+
 	"github.com/jlegrone/tctx/internal/xbar"
 )
 
@@ -154,7 +156,7 @@ func parseAdditionalEnvVars(input []string) (additional map[string]string, err e
 	return envVars, nil
 }
 
-func switchContexts(w io.Writer, rw *config.FSReaderWriter, contextName, namespace string) error {
+func switchContexts(w io.Writer, rw *configrw.FSReaderWriter, contextName, namespace string) error {
 	if err := rw.SetActiveContext(contextName, namespace); err != nil {
 		return err
 	}
@@ -193,7 +195,7 @@ func newApp(configFile string) *cli.App {
 						return err
 					}
 
-					rw, err := config.NewReaderWriter(path)
+					rw, err := configrw.NewReaderWriter(path)
 					if err != nil {
 						return err
 					}
@@ -221,7 +223,7 @@ func newApp(configFile string) *cli.App {
 						return err
 					}
 
-					rw, err := config.NewReaderWriter(path)
+					rw, err := configrw.NewReaderWriter(path)
 					if err != nil {
 						return err
 					}
@@ -246,7 +248,7 @@ func newApp(configFile string) *cli.App {
 					getContextFlag(true),
 				},
 				Action: func(c *cli.Context) error {
-					rw, err := config.NewReaderWriter(c.String(configPathFlag))
+					rw, err := configrw.NewReaderWriter(c.String(configPathFlag))
 					if err != nil {
 						return err
 					}
@@ -266,7 +268,7 @@ func newApp(configFile string) *cli.App {
 				Aliases: []string{"ls"},
 				Usage:   "list contexts",
 				Action: func(c *cli.Context) error {
-					rw, err := config.NewReaderWriter(c.String(configPathFlag))
+					rw, err := configrw.NewReaderWriter(c.String(configPathFlag))
 					if err != nil {
 						return err
 					}
@@ -312,7 +314,7 @@ func newApp(configFile string) *cli.App {
 						namespace   = c.String(namespaceFlag)
 					)
 
-					rw, err := config.NewReaderWriter(configPath)
+					rw, err := configrw.NewReaderWriter(configPath)
 					if err != nil {
 						return err
 					}
@@ -333,7 +335,7 @@ func newApp(configFile string) *cli.App {
 						return err
 					}
 
-					rw, err := config.NewReaderWriter(c.String(configPathFlag))
+					rw, err := configrw.NewReaderWriter(c.String(configPathFlag))
 					if err != nil {
 						return err
 					}
@@ -369,7 +371,7 @@ func newApp(configFile string) *cli.App {
 						return cli.ShowCommandHelp(c, "exec")
 					}
 
-					rw, err := config.NewReaderWriter(c.String(configPathFlag))
+					rw, err := configrw.NewReaderWriter(c.String(configPathFlag))
 					if err != nil {
 						return err
 					}

@@ -1,4 +1,4 @@
-package config
+package configrw
 
 import (
 	"encoding/json"
@@ -6,48 +6,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/jlegrone/tctx/config/config"
 )
-
-type TLSConfig struct {
-	// Path to x509 certificate
-	CertPath string `json:"certPath"`
-	// Path to private key
-	KeyPath string `json:"keyPath"`
-	// Path to server CA certificate
-	CACertPath string `json:"caPath"`
-	// Disable tls host name verification (tls must be enabled)
-	DisableHostVerification bool `json:"disableHostVerification"`
-	// Override for target server name
-	ServerName string `json:"serverName"`
-}
-
-type ClusterConfig struct {
-	// host:port for Temporal frontend service
-	Address string `json:"address"`
-	// Web UI Link
-	WebAddress string `json:"webAddress"`
-	// Temporal workflow namespace (default: "default")
-	Namespace string `json:"namespace"`
-	// Headers provider plugin executable name
-	HeadersProvider string `json:"headersProvider"`
-	// Data converter plugin executable name
-	DataConverter string     `json:"dataConverter"`
-	TLS           *TLSConfig `json:"tls,omitempty"`
-	// Any additional environment variables that are needed
-	Environment map[string]string `json:"additional,omitempty"`
-}
-
-func (c ClusterConfig) GetTLS() TLSConfig {
-	if c.TLS == nil {
-		return TLSConfig{}
-	}
-	return *c.TLS
-}
 
 type Config struct {
 	ActiveContext string `json:"active"`
 	// Map of context names to cluster configuration
-	Contexts map[string]*ClusterConfig `json:"contexts"`
+	Contexts map[string]*config.ClusterConfig `json:"contexts"`
 }
 
 func NewReaderWriter(file string) (*FSReaderWriter, error) {
@@ -77,7 +43,7 @@ type FSReaderWriter struct {
 	path string
 }
 
-func (f *FSReaderWriter) GetContext(name string) (*ClusterConfig, error) {
+func (f *FSReaderWriter) GetContext(name string) (*config.ClusterConfig, error) {
 	cfg, err := f.GetAllContexts()
 	if err != nil {
 		return nil, fmt.Errorf("could not get all contexts: %w", err)
@@ -92,7 +58,7 @@ func (f *FSReaderWriter) GetContext(name string) (*ClusterConfig, error) {
 	return nil, fmt.Errorf("context %q does not exist", name)
 }
 
-func (f *FSReaderWriter) GetActiveContext() (*ClusterConfig, error) {
+func (f *FSReaderWriter) GetActiveContext() (*config.ClusterConfig, error) {
 	cfg, err := f.GetAllContexts()
 	if err != nil {
 		return nil, err
@@ -142,13 +108,13 @@ func (f *FSReaderWriter) GetAllContexts() (*Config, error) {
 		return nil, fmt.Errorf("error parsing config file: %w", err)
 	}
 	if result.Contexts == nil {
-		result.Contexts = map[string]*ClusterConfig{}
+		result.Contexts = map[string]*config.ClusterConfig{}
 	}
 
 	return &result, nil
 }
 
-func (f *FSReaderWriter) UpsertContext(name string, new *ClusterConfig) error {
+func (f *FSReaderWriter) UpsertContext(name string, new *config.ClusterConfig) error {
 	allContexts, err := f.GetAllContexts()
 	if err != nil {
 		return err
@@ -233,16 +199,4 @@ func write(filepath string, config *Config) error {
 		return err
 	}
 	return os.WriteFile(filepath, b, os.ModePerm)
-}
-
-func GetDefaultConfigPath() (string, error) {
-	userConfigDir, err := os.UserConfigDir()
-	if err != nil {
-		return "", fmt.Errorf("error getting default config file path: %s", err)
-	}
-	return GetConfigPath(userConfigDir), nil
-}
-
-func GetConfigPath(userConfigDir string) string {
-	return filepath.Join(userConfigDir, "tctx", "config.json")
 }

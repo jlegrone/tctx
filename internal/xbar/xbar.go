@@ -18,7 +18,8 @@ import (
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sys/unix"
 
-	"github.com/jlegrone/tctx/config"
+	"github.com/jlegrone/tctx/config/config"
+	"github.com/jlegrone/tctx/internal/configrw"
 )
 
 var (
@@ -41,7 +42,7 @@ var (
 )
 
 type Options struct {
-	*config.Config
+	*configrw.Config
 	TctxPath, TctlPath         string
 	ShowCluster, ShowNamespace bool
 }

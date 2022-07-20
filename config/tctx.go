@@ -1,4 +1,9 @@
-package config
+package tctx
+
+import (
+	"github.com/jlegrone/tctx/config/config"
+	"github.com/jlegrone/tctx/internal/configrw"
+)
 
 type Tctx struct {
 	configFilePath string
@@ -20,9 +25,9 @@ func NewTctx(opts ...Option) (*Tctx, error) {
 		opt(&t)
 	}
 
-	//Set Default Options
+	// Set Default Options
 	if t.configFilePath == "" {
-		configFilePath, err := GetDefaultConfigPath()
+		configFilePath, err := config.GetDefaultConfigPath()
 		if err != nil {
 			return nil, err
 		}
@@ -32,8 +37,8 @@ func NewTctx(opts ...Option) (*Tctx, error) {
 	return &t, nil
 }
 
-func (t *Tctx) GetActiveClusterConfig() (*ClusterConfig, error) {
-	rw, err := NewReaderWriter(t.configFilePath)
+func (t *Tctx) GetActiveClusterConfig() (*config.ClusterConfig, error) {
+	rw, err := configrw.NewReaderWriter(t.configFilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -45,8 +50,8 @@ func (t *Tctx) GetActiveClusterConfig() (*ClusterConfig, error) {
 	return cfg, err
 }
 
-func (t *Tctx) GetClusterConfig(contextName string) (*ClusterConfig, error) {
-	rw, err := NewReaderWriter(t.configFilePath)
+func (t *Tctx) GetClusterConfig(contextName string) (*config.ClusterConfig, error) {
+	rw, err := configrw.NewReaderWriter(t.configFilePath)
 	if err != nil {
 		return nil, err
 	}
