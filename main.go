@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"sort"
 	"strings"
 	"text/tabwriter"
@@ -14,8 +13,8 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/jlegrone/tctx/internal/config"
-	"github.com/jlegrone/tctx/internal/xbar"
+	"github.com/evchee/tctx/config"
+	"github.com/evchee/tctx/internal/xbar"
 )
 
 const (
@@ -41,10 +40,6 @@ func getContextFlag(required bool) *cli.StringFlag {
 		Usage:    "name of the context",
 		Required: required,
 	}
-}
-
-func getConfigPath(userConfigDir string) string {
-	return filepath.Join(userConfigDir, "tctx", "config.json")
 }
 
 func getContextAndNamespaceFlags(required bool, defaultNamespace string) []cli.Flag {
@@ -112,11 +107,10 @@ func getAddOrUpdateFlags(required bool) []cli.Flag {
 }
 
 func main() {
-	userConfigDir, err := os.UserConfigDir()
+	userConfigFile, err := config.GetDefaultConfigPath()
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "error getting default config file path: %s", err)
+		_, _ = fmt.Fprintln(os.Stderr, err)
 	}
-	userConfigFile := getConfigPath(userConfigDir)
 
 	if err := newApp(userConfigFile).Run(os.Args); err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, err)

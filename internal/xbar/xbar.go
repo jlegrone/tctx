@@ -18,7 +18,7 @@ import (
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sys/unix"
 
-	"github.com/jlegrone/tctx/internal/config"
+	"github.com/evchee/tctx/config"
 )
 
 var (

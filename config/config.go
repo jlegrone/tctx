@@ -234,3 +234,15 @@ func write(filepath string, config *Config) error {
 	}
 	return os.WriteFile(filepath, b, os.ModePerm)
 }
+
+func GetDefaultConfigPath() (string, error) {
+	userConfigDir, err := os.UserConfigDir()
+	if err != nil {
+		return "", fmt.Errorf("error getting default config file path: %s", err)
+	}
+	return GetConfigPath(userConfigDir), nil
+}
+
+func GetConfigPath(userConfigDir string) string {
+	return filepath.Join(userConfigDir, "tctx", "config.json")
+}
