@@ -58,3 +58,19 @@ func (t *Tctx) GetClusterConfig(contextName string) (*config.ClusterConfig, erro
 	cfg, err := rw.GetContext(contextName)
 	return cfg, err
 }
+
+func (t *Tctx) GetClusterNames() ([]string, error) {
+	rw, err := configrw.NewReaderWriter(t.configFilePath)
+	if err != nil {
+		return nil, err
+	}
+	cfgs, err := rw.GetAllContexts()
+	if err != nil {
+		return nil, err
+	}
+	names := []string{}
+	for name := range cfgs.Contexts {
+		names = append(names, name)
+	}
+	return names, nil
+}
