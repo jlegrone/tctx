@@ -5,8 +5,8 @@
 # <xbar.author>Jacob LeGrone</xbar.author>
 # <xbar.author.github>jlegrone</xbar.author.github>
 # <xbar.desc>Switch Temporal cluster and namespace contexts.</xbar.desc>
-# <xbar.abouturl>https://github.com/jlegrone/tctx</xbar.abouturl>
-# <xbar.image>https://github.com/jlegrone/tctx/raw/jlegrone/xbar/internal/xbar/screenshot.png</xbar.image>
+# <xbar.abouturl>https://github.com/evchee/tctx</xbar.abouturl>
+# <xbar.image>https://github.com/evchee/tctx/raw/jlegrone/xbar/internal/xbar/screenshot.png</xbar.image>
 # <xbar.dependencies>tctx,tctl</xbar.dependencies>
 # <xbar.var>boolean(SHOW_CLUSTER=""): Display Temporal cluster name in menu bar.</xbar.var>
 # <xbar.var>boolean(SHOW_NAMESPACE=""): Display Temporal namespace in menu bar.</xbar.var>

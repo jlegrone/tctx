@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/evchee/tctx/config"
 	"github.com/urfave/cli/v2"
 )
 
@@ -22,7 +23,7 @@ func TestCLI(t *testing.T) {
 		}
 	}()
 
-	c := tctxConfigFile(getConfigPath(configDir))
+	c := tctxConfigFile(config.GetConfigPath(configDir))
 
 	// Check for no error when config is empty
 	c.Run(t, TestCase{

@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"sort"
 	"strings"
 	"text/tabwriter"
@@ -14,8 +13,8 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/jlegrone/tctx/internal/config"
-	"github.com/jlegrone/tctx/internal/xbar"
+	"github.com/evchee/tctx/config"
+	"github.com/evchee/tctx/internal/xbar"
 )
 
 const (
@@ -41,10 +40,6 @@ func getContextFlag(required bool) *cli.StringFlag {
 		Usage:    "name of the context",
 		Required: required,
 	}
-}
-
-func getConfigPath(userConfigDir string) string {
-	return filepath.Join(userConfigDir, "tctx", "config.json")
 }
 
 func getContextAndNamespaceFlags(required bool, defaultNamespace string) []cli.Flag {
@@ -112,11 +107,10 @@ func getAddOrUpdateFlags(required bool) []cli.Flag {
 }
 
 func main() {
-	userConfigDir, err := os.UserConfigDir()
+	userConfigFile, err := config.GetDefaultConfigPath()
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "error getting default config file path: %s", err)
+		_, _ = fmt.Fprintln(os.Stderr, err)
 	}
-	userConfigFile := getConfigPath(userConfigDir)
 
 	if err := newApp(userConfigFile).Run(os.Args); err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, err)
@@ -160,12 +154,12 @@ func parseAdditionalEnvVars(input []string) (additional map[string]string, err e
 	return envVars, nil
 }
 
-func switchContexts(w io.Writer, rw *config.FSReaderWriter, contextName, namespace string) error {
-	if err := rw.SetActiveContext(contextName, namespace); err != nil {
+func switchContexts(w io.Writer, t *config.Tctx, contextName, namespace string) error {
+	if err := t.SetActiveContext(contextName, namespace); err != nil {
 		return err
 	}
 
-	cfg, err := rw.GetContext(contextName)
+	cfg, err := t.GetContext(contextName)
 	if err != nil {
 		return err
 	}
@@ -199,22 +193,22 @@ func newApp(configFile string) *cli.App {
 						return err
 					}
 
-					rw, err := config.NewReaderWriter(path)
+					t, err := config.NewTctx(config.WithConfigFile(path))
 					if err != nil {
 						return err
 					}
 
 					// Error if context already exists
-					existingCfg, _ := rw.GetContext(name)
+					existingCfg, _ := t.GetContext(name)
 					if existingCfg != nil {
 						return fmt.Errorf("a context with name %q already exists", name)
 					}
 
-					if err := rw.UpsertContext(name, cfg); err != nil {
+					if err := t.UpsertContext(name, cfg); err != nil {
 						return err
 					}
 
-					return switchContexts(c.App.Writer, rw, name, cfg.Namespace)
+					return switchContexts(c.App.Writer, t, name, cfg.Namespace)
 				},
 			},
 			{
@@ -227,21 +221,21 @@ func newApp(configFile string) *cli.App {
 						return err
 					}
 
-					rw, err := config.NewReaderWriter(path)
+					t, err := config.NewTctx(config.WithConfigFile(path))
 					if err != nil {
 						return err
 					}
 
 					// Check that context already exists
-					if _, err := rw.GetContext(name); err != nil {
+					if _, err := t.GetContext(name); err != nil {
 						return err
 					}
 
-					if err := rw.UpsertContext(name, newCfg); err != nil {
+					if err := t.UpsertContext(name, newCfg); err != nil {
 						return err
 					}
 
-					return switchContexts(c.App.Writer, rw, name, newCfg.Namespace)
+					return switchContexts(c.App.Writer, t, name, newCfg.Namespace)
 				},
 			},
 			{
@@ -252,13 +246,13 @@ func newApp(configFile string) *cli.App {
 					getContextFlag(true),
 				},
 				Action: func(c *cli.Context) error {
-					rw, err := config.NewReaderWriter(c.String(configPathFlag))
+					t, err := config.NewTctx(config.WithConfigFile(c.String(configPathFlag)))
 					if err != nil {
 						return err
 					}
 
 					contextName := c.String(contextNameFlag)
-					if err := rw.DeleteContext(contextName); err != nil {
+					if err := t.DeleteContext(contextName); err != nil {
 						return err
 					}
 
@@ -272,11 +266,11 @@ func newApp(configFile string) *cli.App {
 				Aliases: []string{"ls"},
 				Usage:   "list contexts",
 				Action: func(c *cli.Context) error {
-					rw, err := config.NewReaderWriter(c.String(configPathFlag))
+					t, err := config.NewTctx(config.WithConfigFile(c.String(configPathFlag)))
 					if err != nil {
 						return err
 					}
-					contexts, err := rw.GetAllContexts()
+					contexts, err := t.GetAllContexts()
 					if err != nil {
 						return err
 					}
@@ -318,12 +312,12 @@ func newApp(configFile string) *cli.App {
 						namespace   = c.String(namespaceFlag)
 					)
 
-					rw, err := config.NewReaderWriter(configPath)
+					t, err := config.NewTctx(config.WithConfigFile(configPath))
 					if err != nil {
 						return err
 					}
 
-					return switchContexts(c.App.Writer, rw, contextName, namespace)
+					return switchContexts(c.App.Writer, t, contextName, namespace)
 				},
 			},
 			{
@@ -339,11 +333,11 @@ func newApp(configFile string) *cli.App {
 						return err
 					}
 
-					rw, err := config.NewReaderWriter(c.String(configPathFlag))
+					t, err := config.NewTctx(config.WithConfigFile(c.String(configPathFlag)))
 					if err != nil {
 						return err
 					}
-					cfg, err := rw.GetAllContexts()
+					cfg, err := t.GetAllContexts()
 					if err != nil {
 						return err
 					}
@@ -375,20 +369,20 @@ func newApp(configFile string) *cli.App {
 						return cli.ShowCommandHelp(c, "exec")
 					}
 
-					rw, err := config.NewReaderWriter(c.String(configPathFlag))
+					t, err := config.NewTctx(config.WithConfigFile(c.String(configPathFlag)))
 					if err != nil {
 						return err
 					}
 
 					contextName := c.String(contextNameFlag)
 					if contextName == "" {
-						contextName, err = rw.GetActiveContextName()
+						contextName, err = t.GetActiveContextName()
 						if err != nil {
 							return err
 						}
 					}
 
-					cfg, err := rw.GetContext(contextName)
+					cfg, err := t.GetContext(contextName)
 					if err != nil {
 						return err
 					}

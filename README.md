@@ -1,6 +1,6 @@
 # tctx
 
-[![ci](https://github.com/jlegrone/tctx/actions/workflows/ci.yml/badge.svg)](https://github.com/jlegrone/tctx/actions/workflows/ci.yml)
+[![ci](https://github.com/evchee/tctx/actions/workflows/ci.yml/badge.svg)](https://github.com/evchee/tctx/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/jlegrone/tctx/branch/main/graph/badge.svg?token=jClJfwNTKI)](https://codecov.io/gh/jlegrone/tctx)
 
 `tctx` makes it fast and easy to switch between Temporal clusters when running `tctl` commands.
@@ -10,7 +10,7 @@
 Build from source using [go install](https://golang.org/ref/mod#go-install):
 
 ```bash
-go install github.com/jlegrone/tctx@latest
+go install github.com/evchee/tctx@latest
 ```
 
 ## Usage
