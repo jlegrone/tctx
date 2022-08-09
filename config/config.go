@@ -53,9 +53,9 @@ func GetDefaultConfigPath() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error getting default config file path: %s", err)
 	}
-	return GetConfigPath(userConfigDir), nil
+	return getConfigPath(userConfigDir), nil
 }
 
-func GetConfigPath(userConfigDir string) string {
+func getConfigPath(userConfigDir string) string {
 	return filepath.Join(userConfigDir, "tctx", "config.json")
 }

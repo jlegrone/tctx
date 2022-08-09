@@ -8,20 +8,20 @@ import (
 	"path/filepath"
 )
 
-type Tctx struct {
+type ConfigManager struct {
 	configFilePath string
 }
 
-type Option func(t *Tctx)
+type Option func(t *ConfigManager)
 
 func WithConfigFile(configFilePath string) Option {
-	return func(t *Tctx) {
+	return func(t *ConfigManager) {
 		t.configFilePath = configFilePath
 	}
 }
 
-func NewTctx(opts ...Option) (*Tctx, error) {
-	t := Tctx{}
+func NewConfigManager(opts ...Option) (*ConfigManager, error) {
+	t := ConfigManager{}
 
 	// Apply Options
 	for _, opt := range opts {
@@ -57,7 +57,7 @@ func NewTctx(opts ...Option) (*Tctx, error) {
 	return &t, nil
 }
 
-func (t *Tctx) GetContextNames() ([]string, error) {
+func (t *ConfigManager) GetContextNames() ([]string, error) {
 	cfgs, err := t.GetAllContexts()
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (t *Tctx) GetContextNames() ([]string, error) {
 	return names, nil
 }
 
-func (t *Tctx) GetContext(name string) (*ClusterConfig, error) {
+func (t *ConfigManager) GetContext(name string) (*ClusterConfig, error) {
 	cfg, err := t.GetAllContexts()
 	if err != nil {
 		return nil, fmt.Errorf("could not get all contexts: %w", err)
@@ -84,7 +84,7 @@ func (t *Tctx) GetContext(name string) (*ClusterConfig, error) {
 	return nil, fmt.Errorf("context %q does not exist", name)
 }
 
-func (t *Tctx) GetActiveContext() (*ClusterConfig, error) {
+func (t *ConfigManager) GetActiveContext() (*ClusterConfig, error) {
 	cfg, err := t.GetAllContexts()
 	if err != nil {
 		return nil, err
@@ -107,7 +107,7 @@ func (t *Tctx) GetActiveContext() (*ClusterConfig, error) {
 	return nil, fmt.Errorf("context does not exist")
 }
 
-func (t *Tctx) GetActiveContextName() (string, error) {
+func (t *ConfigManager) GetActiveContextName() (string, error) {
 	cfg, err := t.GetAllContexts()
 	if err != nil {
 		return "", err
@@ -123,7 +123,7 @@ func (t *Tctx) GetActiveContextName() (string, error) {
 	return cfg.ActiveContext, nil
 }
 
-func (t *Tctx) GetAllContexts() (*Config, error) {
+func (t *ConfigManager) GetAllContexts() (*Config, error) {
 	file, err := os.Open(t.configFilePath)
 	if err != nil {
 		return nil, err
@@ -140,7 +140,7 @@ func (t *Tctx) GetAllContexts() (*Config, error) {
 	return &result, nil
 }
 
-func (t *Tctx) UpsertContext(name string, new *ClusterConfig) error {
+func (t *ConfigManager) UpsertContext(name string, new *ClusterConfig) error {
 	allContexts, err := t.GetAllContexts()
 	if err != nil {
 		return err
@@ -179,7 +179,7 @@ func (t *Tctx) UpsertContext(name string, new *ClusterConfig) error {
 	return write(t.configFilePath, allContexts)
 }
 
-func (t *Tctx) SetActiveContext(name, namespace string) error {
+func (t *ConfigManager) SetActiveContext(name, namespace string) error {
 	config, err := t.GetAllContexts()
 	if err != nil {
 		return fmt.Errorf("could not get contexts: %w", err)
@@ -200,7 +200,7 @@ func (t *Tctx) SetActiveContext(name, namespace string) error {
 	return write(t.configFilePath, config)
 }
 
-func (t *Tctx) DeleteContext(name string) error {
+func (t *ConfigManager) DeleteContext(name string) error {
 	config, err := t.GetAllContexts()
 	if err != nil {
 		return fmt.Errorf("could not get contexts: %w", err)
