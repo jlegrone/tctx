@@ -194,7 +194,7 @@ func newApp(configFile string) *cli.App {
 						return err
 					}
 
-					t, err := config.NewTctx(config.WithConfigFile(path))
+					t, err := config.NewConfigManager(config.WithConfigFile(path))
 					if err != nil {
 						return err
 					}
