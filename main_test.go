@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -21,8 +22,7 @@ func TestCLI(t *testing.T) {
 			t.Fatal(err)
 		}
 	}()
-
-	c := tctxConfigFile(getConfigPath(configDir))
+	c := tctxConfigFile(filepath.Join(configDir, "tctx", "config.json"))
 
 	// Check for no error when config is empty
 	c.Run(t, TestCase{
