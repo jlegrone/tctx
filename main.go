@@ -155,7 +155,7 @@ func parseAdditionalEnvVars(input []string) (additional map[string]string, err e
 	return envVars, nil
 }
 
-func switchContexts(w io.Writer, t *config.Tctx, contextName, namespace string) error {
+func switchContexts(w io.Writer, t *config.ConfigManager, contextName, namespace string) error {
 	if err := t.SetActiveContext(contextName, namespace); err != nil {
 		return err
 	}
@@ -222,7 +222,7 @@ func newApp(configFile string) *cli.App {
 						return err
 					}
 
-					t, err := config.NewTctx(config.WithConfigFile(path))
+					t, err := config.NewConfigManager(config.WithConfigFile(path))
 					if err != nil {
 						return err
 					}
@@ -247,7 +247,7 @@ func newApp(configFile string) *cli.App {
 					getContextFlag(true),
 				},
 				Action: func(c *cli.Context) error {
-					t, err := config.NewTctx(config.WithConfigFile(c.String(configPathFlag)))
+					t, err := config.NewConfigManager(config.WithConfigFile(c.String(configPathFlag)))
 					if err != nil {
 						return err
 					}
@@ -267,7 +267,7 @@ func newApp(configFile string) *cli.App {
 				Aliases: []string{"ls"},
 				Usage:   "list contexts",
 				Action: func(c *cli.Context) error {
-					t, err := config.NewTctx(config.WithConfigFile(c.String(configPathFlag)))
+					t, err := config.NewConfigManager(config.WithConfigFile(c.String(configPathFlag)))
 					if err != nil {
 						return err
 					}
@@ -313,7 +313,7 @@ func newApp(configFile string) *cli.App {
 						namespace   = c.String(namespaceFlag)
 					)
 
-					t, err := config.NewTctx(config.WithConfigFile(configPath))
+					t, err := config.NewConfigManager(config.WithConfigFile(configPath))
 					if err != nil {
 						return err
 					}
@@ -334,7 +334,7 @@ func newApp(configFile string) *cli.App {
 						return err
 					}
 
-					t, err := config.NewTctx(config.WithConfigFile(c.String(configPathFlag)))
+					t, err := config.NewConfigManager(config.WithConfigFile(c.String(configPathFlag)))
 					if err != nil {
 						return err
 					}
@@ -370,7 +370,7 @@ func newApp(configFile string) *cli.App {
 						return cli.ShowCommandHelp(c, "exec")
 					}
 
-					t, err := config.NewTctx(config.WithConfigFile(c.String(configPathFlag)))
+					t, err := config.NewConfigManager(config.WithConfigFile(c.String(configPathFlag)))
 					if err != nil {
 						return err
 					}
