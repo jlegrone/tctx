@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/jlegrone/tctx/config"
 	"github.com/urfave/cli/v2"
 )
 
@@ -22,8 +22,7 @@ func TestCLI(t *testing.T) {
 			t.Fatal(err)
 		}
 	}()
-
-	c := tctxConfigFile(config.GetConfigPath(configDir))
+	c := tctxConfigFile(filepath.Join(configDir, "tctx", "config.json"))
 
 	// Check for no error when config is empty
 	c.Run(t, TestCase{

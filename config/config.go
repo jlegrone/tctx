@@ -48,6 +48,8 @@ func (c ClusterConfig) GetTLS() TLSConfig {
 	return *c.TLS
 }
 
+// GetDefaultConfigPath returns the path to the current user's default tctx config file.
+// On unix systems, this will be `$XDG_CONFIG_HOME/tctx/config.json`.
 func GetDefaultConfigPath() (string, error) {
 	userConfigDir, err := os.UserConfigDir()
 	if err != nil {
