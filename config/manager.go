@@ -14,12 +14,14 @@ type ConfigManager struct {
 
 type Option func(t *ConfigManager)
 
+// WithConfigFile returns the option to set the config file path
 func WithConfigFile(configFilePath string) Option {
 	return func(t *ConfigManager) {
 		t.configFilePath = configFilePath
 	}
 }
 
+// NewConfigManager returns a new ConfigManager to interact with the tctx config
 func NewConfigManager(opts ...Option) (*ConfigManager, error) {
 	t := ConfigManager{}
 
@@ -57,6 +59,7 @@ func NewConfigManager(opts ...Option) (*ConfigManager, error) {
 	return &t, nil
 }
 
+// GetContextNames returns the list of configured context names
 func (t *ConfigManager) GetContextNames() ([]string, error) {
 	cfgs, err := t.GetAllContexts()
 	if err != nil {
@@ -69,6 +72,7 @@ func (t *ConfigManager) GetContextNames() ([]string, error) {
 	return names, nil
 }
 
+// GetContext returns the ClusterConfig for a given context names
 func (t *ConfigManager) GetContext(name string) (*ClusterConfig, error) {
 	cfg, err := t.GetAllContexts()
 	if err != nil {
@@ -84,6 +88,7 @@ func (t *ConfigManager) GetContext(name string) (*ClusterConfig, error) {
 	return nil, fmt.Errorf("context %q does not exist", name)
 }
 
+// GetContext returns the ClusterConfig for a the active context
 func (t *ConfigManager) GetActiveContext() (*ClusterConfig, error) {
 	cfg, err := t.GetAllContexts()
 	if err != nil {
@@ -107,6 +112,7 @@ func (t *ConfigManager) GetActiveContext() (*ClusterConfig, error) {
 	return nil, fmt.Errorf("context does not exist")
 }
 
+// GetContext returns the name of the active context
 func (t *ConfigManager) GetActiveContextName() (string, error) {
 	cfg, err := t.GetAllContexts()
 	if err != nil {
@@ -123,6 +129,7 @@ func (t *ConfigManager) GetActiveContextName() (string, error) {
 	return cfg.ActiveContext, nil
 }
 
+// GetAllContexts returns the ClusterConfig for all configured contexts
 func (t *ConfigManager) GetAllContexts() (*Config, error) {
 	file, err := os.Open(t.configFilePath)
 	if err != nil {
@@ -140,6 +147,7 @@ func (t *ConfigManager) GetAllContexts() (*Config, error) {
 	return &result, nil
 }
 
+// UpsertContext upserts a context into the configuration file
 func (t *ConfigManager) UpsertContext(name string, new *ClusterConfig) error {
 	allContexts, err := t.GetAllContexts()
 	if err != nil {
@@ -179,6 +187,7 @@ func (t *ConfigManager) UpsertContext(name string, new *ClusterConfig) error {
 	return write(t.configFilePath, allContexts)
 }
 
+// SetActiveContext sets the active context
 func (t *ConfigManager) SetActiveContext(name, namespace string) error {
 	config, err := t.GetAllContexts()
 	if err != nil {
@@ -200,6 +209,7 @@ func (t *ConfigManager) SetActiveContext(name, namespace string) error {
 	return write(t.configFilePath, config)
 }
 
+// DeleteContext deletes the context with given name from the config
 func (t *ConfigManager) DeleteContext(name string) error {
 	config, err := t.GetAllContexts()
 	if err != nil {
