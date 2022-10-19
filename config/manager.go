@@ -132,6 +132,7 @@ func (t *ConfigManager) GetActiveContextName() (string, error) {
 // GetAllContexts returns the ClusterConfig for all configured contexts
 func (t *ConfigManager) GetAllContexts() (*Config, error) {
 	file, err := os.Open(t.configFilePath)
+	defer file.Close()
 	if err != nil {
 		return nil, err
 	}
