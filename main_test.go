@@ -27,7 +27,7 @@ func TestCLI(t *testing.T) {
 	// Check for no error when config is empty
 	c.Run(t, TestCase{
 		Command: "list",
-		StdOut:  "NAME    ADDRESS    NAMESPACE    STATUS",
+		StdOut:  "NAME    ADDRESS    NAMESPACE    WEB    STATUS",
 	})
 	// Check for error if no active context
 	c.Run(t, TestCase{
@@ -41,16 +41,16 @@ func TestCLI(t *testing.T) {
 	})
 	// Add a second context
 	c.Run(t, TestCase{
-		Command: "add -c production --namespace myapp --address temporal.example.com:443",
+		Command: "add -c production --namespace myapp --address temporal.example.com:443 --web_address http://localhost:8080",
 		StdOut:  "Context \"production\" modified.\nActive namespace is \"myapp\".\n",
 	})
 	// Validate new list output
 	c.Run(t, TestCase{
 		Command: "list",
 		StdOut: `
-NAME          ADDRESS                     NAMESPACE    STATUS    
-localhost     localhost:7233              default      
-production    temporal.example.com:443    myapp        active`,
+NAME          ADDRESS                     NAMESPACE    WEB                                                 STATUS    
+localhost     localhost:7233              default                                                          
+production    temporal.example.com:443    myapp        http://localhost:8080/namespaces/myapp/workflows    active`,
 	})
 	// Check that environment variables are correctly set
 	c.Run(t, TestCase{
