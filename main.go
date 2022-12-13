@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"os/exec"
 	"sort"
@@ -283,13 +284,20 @@ func newApp(configFile string) *cli.App {
 					sort.Strings(names)
 
 					w := tabwriter.NewWriter(c.App.Writer, 1, 1, 4, ' ', 0)
-					if _, err := fmt.Fprintln(w, "NAME\tADDRESS\tNAMESPACE\tSTATUS\t"); err != nil {
+					if _, err := fmt.Fprintln(w, "NAME\tADDRESS\tNAMESPACE\tWEB\tSTATUS\t"); err != nil {
 						return err
 					}
 
 					for _, k := range names {
 						v := contexts.Contexts[k]
-						row := fmt.Sprintf("%s\t%s\t%s\t", k, v.Address, v.Namespace)
+						webAddr := ""
+						if v.WebAddress != "" {
+							webAddr, err = url.JoinPath(v.WebAddress, "namespaces", v.Namespace, "workflows")
+							if err != nil {
+								return err
+							}
+						}
+						row := fmt.Sprintf("%s\t%s\t%s\t%s\t", k, v.Address, v.Namespace, webAddr)
 						if contexts.ActiveContext == k {
 							row += "active\t"
 						}
