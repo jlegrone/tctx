@@ -48,8 +48,8 @@ func TestCLI(t *testing.T) {
 	c.Run(t, TestCase{
 		Command: "list",
 		StdOut: `
-NAME          ADDRESS                     NAMESPACE    WEB                                                 STATUS    
-localhost     localhost:7233              default                                                          
+NAME          ADDRESS                     NAMESPACE    WEB                                                 STATUS
+localhost     localhost:7233              default
 production    temporal.example.com:443    myapp        http://localhost:8080/namespaces/myapp/workflows    active`,
 	})
 	// Check that environment variables are correctly set
@@ -139,6 +139,56 @@ production    temporal.example.com:443    myapp        http://localhost:8080/nam
 		StdOutContains: []string{
 			"VAULT_ADDR=https://vault.test.example",
 			"AUTH_ROLE=test_example",
+			"FOO=bar",
+		},
+	})
+}
+
+func TestNestedRegression(t *testing.T) {
+	configDir, err := ioutil.TempDir("", "tctx_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := os.RemoveAll(configDir); err != nil {
+			t.Fatal(err)
+		}
+	}()
+	c := tctxConfigFile(filepath.Join(configDir, "tctx", "config.json"))
+
+	// Add a context
+	tlsCaPath := "/path/to/ca"
+	c.Run(t, TestCase{
+		Command: fmt.Sprintf("add -c regression --namespace default --address localhost:7233 --tls_ca_path %s", tlsCaPath),
+		StdOut:  "Context \"regression\" modified.\nActive namespace is \"default\".\n",
+	})
+
+	// Switch to new context
+	c.Run(t, TestCase{
+		Command: "use -c regression",
+		StdOut:  "Context \"regression\" modified.\nActive namespace is \"default\".",
+	})
+
+	// Assert that the proper ca path is present
+	c.Run(t, TestCase{
+		Command: "exec -- printenv",
+		StdOutContains: []string{
+			fmt.Sprintf("TEMPORAL_CLI_TLS_CA=%s", tlsCaPath),
+		},
+	})
+
+	// Update the context, adding a new environment variable
+	c.Run(t, TestCase{
+		Command: "update -c regression --env FOO=bar",
+		StdOut:  "Context \"regression\" modified.\nActive namespace is \"default\".",
+	})
+
+	// Assert that the proper ca path is still present
+	// This is the regression check
+	c.Run(t, TestCase{
+		Command: "exec -- printenv",
+		StdOutContains: []string{
+			fmt.Sprintf("TEMPORAL_CLI_TLS_CA=%s", tlsCaPath),
 			"FOO=bar",
 		},
 	})
