@@ -170,7 +170,30 @@ func (t *ConfigManager) UpsertContext(name string, new *ClusterConfig) error {
 			existing.DataConverter = new.DataConverter
 		}
 		if new.TLS != nil {
-			existing.TLS = new.TLS
+
+			if new.TLS.CertPath != "" {
+				existing.TLS.CertPath = new.TLS.CertPath
+			}
+
+			if new.TLS.KeyPath != "" {
+				existing.TLS.KeyPath = new.TLS.KeyPath
+			}
+
+			if new.TLS.CACertPath != "" {
+				existing.TLS.CACertPath = new.TLS.CACertPath
+			}
+
+			if new.TLS.ServerName != "" {
+				existing.TLS.ServerName = new.TLS.ServerName
+			}
+
+			// This one is tricky. It'll basically always be false in this operation unless the
+			// user explicitly sets it to true on the command line due to Go's "defaults".
+			// In order to properly track this, there likely needs to be a different type to
+			// represent the options specified on the command line *or* the Config type needs to be
+			// pointers, where a nil option represents "unchanged"
+			existing.TLS.DisableHostVerification = new.TLS.DisableHostVerification
+
 		}
 		if new.Environment != nil {
 			if existing.Environment == nil {
