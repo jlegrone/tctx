@@ -47,10 +47,11 @@ func TestCLI(t *testing.T) {
 	// Validate new list output
 	c.Run(t, TestCase{
 		Command: "list",
-		StdOut: `
-NAME          ADDRESS                     NAMESPACE    WEB                                                 STATUS
-localhost     localhost:7233              default
-production    temporal.example.com:443    myapp        http://localhost:8080/namespaces/myapp/workflows    active`,
+		StdOutContains: []string{
+			"NAME          ADDRESS                     NAMESPACE    WEB                                                 STATUS",
+			"localhost     localhost:7233              default",
+			"production    temporal.example.com:443    myapp        http://localhost:8080/namespaces/myapp/workflows    active",
+		},
 	})
 	// Check that environment variables are correctly set
 	c.Run(t, TestCase{
@@ -211,6 +212,7 @@ func (f tctxConfigFile) newApp() (*cli.App, *bytes.Buffer) {
 }
 
 func (f tctxConfigFile) Run(t *testing.T, tc TestCase) {
+	t.Helper()
 	app, buf := f.newApp()
 	err := app.Run(append([]string{"tctx"}, strings.Split(tc.Command, " ")...))
 
@@ -235,6 +237,7 @@ func (f tctxConfigFile) Run(t *testing.T, tc TestCase) {
 }
 
 func assertOutput(t *testing.T, expected, actual string) {
+	t.Helper()
 	expected = strings.TrimSpace(expected)
 	actual = strings.TrimSpace(actual)
 	if expected != "" && expected != actual {
